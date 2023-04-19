@@ -106,12 +106,13 @@ int osdp_file_cmd_stat_decode(struct osdp_pd *pd, uint8_t *buf, int len)
 		return -1;
 	}
 
-	if (p->status == 0) {
+	if (p->status == 0 || p->status == 1) {
 		f->offset += f->length;
 		f->errors = 0;
 	} else {
 		f->errors++;
 	}
+	LOG_DBG("FILESTAT: %d", p->status);
 	f->length = 0;
 
 	assert(f->offset <= f->size);
@@ -210,17 +211,22 @@ int osdp_file_cmd_stat_build(struct osdp_pd *pd, uint8_t *buf, int max_len)
 	}
 
 	if (f->length > 0) {
-		p->status = 0;
+		if (f->offset == 0){
+			p->status = OSDP_FT_PROCESSED;
+		} else {
+			p->status = OSDP_FT_OK;
+		}
 		f->errors = 0;
 		f->offset += f->length;
 	} else {
-		p->status = -1;
+		p->status = OSDP_FT_ABORT;
 	}
 
 	p->rx_size = 0;
 	p->control = 0;
 	p->delay = 0;
 	f->length = 0;
+	LOG_DBG("FILESTAT: %d", p->status);
 
 	assert(f->offset <= f->size);
 	if (f->offset == f->size) { /* EOF */

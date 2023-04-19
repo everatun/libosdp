@@ -64,6 +64,16 @@ struct osdp_cmd_file_stat {
 	uint16_t rx_size;
 } __packed;
 
+enum file_tx_status_e {
+	OSDP_FT_OK = 0,
+	OSDP_FT_PROCESSED = 1,
+	OSDP_FT_REBOOTING = 2,
+	OSDP_FT_FINISHING = 3,
+	OSDP_FT_ABORT = -1,
+	OSDP_FT_UNRECOGNIZED = -2,
+	OSDP_FT_UNACCEPTABLE = -3
+};
+
 enum file_tx_state_e {
 	OSDP_FILE_IDLE,
 	OSDP_FILE_INPROG,
