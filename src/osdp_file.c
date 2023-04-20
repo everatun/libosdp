@@ -195,7 +195,6 @@ int osdp_file_cmd_stat_build(struct osdp_pd *pd, uint8_t *buf, int max_len)
 {
 	struct osdp_cmd_file_stat *p = (struct osdp_cmd_file_stat *)buf;
 	struct osdp_file *f = TO_FILE(pd);
-	const int16_t pre_status = p->status;
 
 	if (f == NULL) {
 		LOG_ERR("Stat_Build: File ops not registered!");
@@ -235,8 +234,8 @@ int osdp_file_cmd_stat_build(struct osdp_pd *pd, uint8_t *buf, int max_len)
 	p->control = 0;
 	p->delay = 0;
 	f->length = 0;
-	LOG_DBG("FILESTAT: %d -> %d", pre_status, p->status);
 
+	LOG_DBG("[offset: %d][size: %d]",f->offset, f->size);
 	assert(f->offset <= f->size);
 	if (f->offset == f->size) { /* EOF */
 		f->ops.close(f->ops.arg);
