@@ -712,6 +712,11 @@ struct osdp_event {
 typedef int (*pd_command_callback_t)(void *arg, struct osdp_cmd *cmd);
 
 /**
+ * @brief Generator of file transfer status
+ */
+typedef int (*pd_filetransfer_status_gen_t)(void * arg);
+
+/**
  * @brief Callback for CP event notifications. After is has been registered with
  * `osdp_cp_set_event_callback`, this method is invoked when the CP receives an
  * event from the PD.
@@ -787,6 +792,13 @@ void osdp_pd_set_capabilities(osdp_t *ctx, struct osdp_pd_cap *cap);
  * @param arg A pointer that will be passed as the first argument of `cb`
  */
 void osdp_pd_set_command_callback(osdp_t *ctx, pd_command_callback_t cb,
+				  void *arg);
+
+
+/**
+ * @brief Set method to generate the status of file transfer if we want to be external
+ */
+void osdp_pd_set_filetransfer_status_gen(osdp_t *ctx, pd_filetransfer_status_gen_t cb,
 				  void *arg);
 
 /**

@@ -326,6 +326,9 @@ struct osdp_pd {
 	/* PD command callback to app with opaque arg pointer as passed by app */
 	void *command_callback_arg;
 	pd_command_callback_t command_callback;
+	/* Filetransfer generator for PD with opaque arg pointer */
+	void *filetransfer_status_gen_arg;
+	pd_filetransfer_status_gen_t pd_filetransfer_status_generator;
 };
 
 struct osdp {

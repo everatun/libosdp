@@ -1168,6 +1168,17 @@ void osdp_pd_set_command_callback(osdp_t *ctx, pd_command_callback_t cb,
 }
 
 OSDP_EXPORT
+void osdp_pd_set_filetransfer_status_gen(osdp_t *ctx, pd_filetransfer_status_gen_t cb,
+				  void *arg)
+{
+	input_check(ctx);
+	struct osdp_pd *pd = GET_CURRENT_PD(ctx);
+
+	pd->filetransfer_status_gen_arg = arg;
+	pd->pd_filetransfer_status_gen_t = cb;
+}
+
+OSDP_EXPORT
 int osdp_pd_notify_event(osdp_t *ctx, struct osdp_event *event)
 {
 	input_check(ctx);
