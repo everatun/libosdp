@@ -67,17 +67,20 @@ int osdp_file_cmd_tx_build(struct osdp_pd *pd, uint8_t *buf, int max_len)
 	p->offset = f->offset;
 	p->size = f->size;
 
-	f->length = f->ops.read(f->ops.arg, p->data, buf_available, p->offset);
+	if (p->offset < p->size){
+		f->length = f->ops.read(f->ops.arg, p->data, buf_available,
+					p->offset);
+		if (f->length == 0) {
+			LOG_WRN("TX_Build: Read 0 length chunk; Aborting transfer!");
+			file_state_reset(f);
+			return -1;
+		}
+	}
 	if (f->length < 0) {
 		LOG_ERR("TX_Build: user read failed! rc:%d len:%d off:%d",
 			f->length, buf_available, p->offset);
 		f->errors++;
 		f->length = 0;
-		return -1;
-	}
-	if (f->length == 0) {
-		LOG_WRN("TX_Build: Read 0 length chunk; Aborting transfer!");
-		file_state_reset(f);
 		return -1;
 	}
 
@@ -107,7 +110,7 @@ int osdp_file_cmd_stat_decode(struct osdp_pd *pd, uint8_t *buf, int len)
 		return -1;
 	}
 
-	if (p->status == 0 || p->status == 1) {
+	if (p->status == OSDP_FT_OK || p->status == OSDP_FT_PROCESSED || p->status == OSDP_FT_FINISHING) {
 		f->offset += f->length;
 		f->errors = 0;
 	} else if (p->status < 0) {
@@ -190,6 +193,8 @@ int osdp_file_cmd_tx_decode(struct osdp_pd *pd, uint8_t *buf, int len)
 			f->errors++;
 			return -1;
 		}
+	}else {
+		LOG_DBG("No more file content, but waiting for PD to finish");
 	}
 
 	return 0;
