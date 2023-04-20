@@ -1175,7 +1175,7 @@ void osdp_pd_set_filetransfer_status_gen(osdp_t *ctx, pd_filetransfer_status_gen
 	struct osdp_pd *pd = GET_CURRENT_PD(ctx);
 
 	pd->filetransfer_status_gen_arg = arg;
-	pd->pd_filetransfer_status_gen_t = cb;
+	pd->pd_filetransfer_status_generator = cb;
 }
 
 OSDP_EXPORT
