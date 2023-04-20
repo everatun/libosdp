@@ -214,16 +214,16 @@ int osdp_file_cmd_stat_build(struct osdp_pd *pd, uint8_t *buf, int max_len)
 	}
 
 	if (f->length > 0) {
-		if (pd->pd_filetransfer_status_generator){
+		if (pd->pd_filetransfer_status_generator) {
 			LOG_DBG("File transfer custom handler");
-			p->status = pd->pd_filetransfer_status_generator(pd->filetransfer_status_gen_arg);
-			}else {
-			if (f->offset == 0){
+			p->status = pd->pd_filetransfer_status_generator(
+				pd->filetransfer_status_gen_arg);
+		} else {
+			if (f->offset == 0) {
 				p->status = OSDP_FT_PROCESSED;
-				} else {
+			} else {
 				p->status = OSDP_FT_OK;
 			}
-
 		}
 		f->errors = 0;
 		f->offset += f->length;
@@ -240,8 +240,13 @@ int osdp_file_cmd_stat_build(struct osdp_pd *pd, uint8_t *buf, int max_len)
 	assert(f->offset <= f->size);
 	if (f->offset == f->size) { /* EOF */
 		f->ops.close(f->ops.arg);
-		f->state = OSDP_FILE_DONE;
-		LOG_INF("TX_Decode: File receive complete");
+		if (pd->pd_filetransfer_status_generator) {
+			p->status = pd->pd_filetransfer_status_generator(
+				pd->filetransfer_status_gen_arg);
+		} else {
+			LOG_INF("TX_Decode: File receive complete");
+			f->state = OSDP_FILE_DONE;
+		}
 	}
 
 	return sizeof(struct osdp_cmd_file_stat);
