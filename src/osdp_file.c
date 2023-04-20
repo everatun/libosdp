@@ -235,7 +235,7 @@ int osdp_file_cmd_stat_build(struct osdp_pd *pd, uint8_t *buf, int max_len)
 	p->delay = 0;
 	f->length = 0;
 
-	LOG_DBG("[offset: %d][size: %d]",f->offset, f->size);
+	LOG_DBG("[offset: %d][size: %d][length: %d]",f->offset, f->size,f->length);
 	assert(f->offset <= f->size);
 	if (f->offset == f->size) { /* EOF */
 		f->ops.close(f->ops.arg);
