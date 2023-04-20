@@ -90,7 +90,6 @@ int osdp_file_cmd_stat_decode(struct osdp_pd *pd, uint8_t *buf, int len)
 {
 	struct osdp_file *f = TO_FILE(pd);
 	struct osdp_cmd_file_stat *p = (struct osdp_cmd_file_stat *)buf;
-	const int16_t pre_status = p->status;
 
 	if (f == NULL) {
 		LOG_ERR("Stat_Decode: File ops not registered!");
@@ -103,25 +102,26 @@ int osdp_file_cmd_stat_decode(struct osdp_pd *pd, uint8_t *buf, int len)
 	}
 
 	if ((size_t)len < sizeof(struct osdp_cmd_file_stat)) {
-		LOG_ERR("Stat_Decode: invalid decode len:%d exp:%zu",
-			len, sizeof(struct osdp_cmd_file_stat));
+		LOG_ERR("Stat_Decode: invalid decode len:%d exp:%zu", len,
+			sizeof(struct osdp_cmd_file_stat));
 		return -1;
 	}
 
 	if (p->status == 0 || p->status == 1) {
 		f->offset += f->length;
 		f->errors = 0;
-	} else {
+	} else if (p->status < 0) {
 		f->errors++;
 	}
-	LOG_DBG("FILESTAT: %d -> %d", pre_status, p->status);
 	f->length = 0;
 
 	assert(f->offset <= f->size);
 	if (f->offset == f->size) { /* EOF */
 		f->ops.close(f->ops.arg);
-		f->state = OSDP_FILE_DONE;
-		LOG_INF("Stat_Decode: File transfer complete");
+		if (p->status == OSDP_FT_REBOOTING) {
+			f->state = OSDP_FILE_DONE;
+			LOG_INF("Stat_Decode: File transfer complete");
+		}
 	}
 
 	return 0;
@@ -150,7 +150,8 @@ int osdp_file_cmd_tx_decode(struct osdp_pd *pd, uint8_t *buf, int len)
 			cmd.id = OSDP_CMD_FILE_TX;
 			cmd.file_tx.flags = f->flags;
 			cmd.file_tx.id = p->type;
-			rc = pd->command_callback(pd->command_callback_arg, &cmd);
+			rc = pd->command_callback(pd->command_callback_arg,
+						  &cmd);
 			if (rc < 0)
 				return -1;
 		}
@@ -175,17 +176,20 @@ int osdp_file_cmd_tx_decode(struct osdp_pd *pd, uint8_t *buf, int len)
 	}
 
 	if ((size_t)len <= sizeof(struct osdp_cmd_file_xfer)) {
-		LOG_ERR("TX_Decode: invalid decode len:%d exp>=%zu",
-			len, sizeof(struct osdp_cmd_file_xfer));
+		LOG_ERR("TX_Decode: invalid decode len:%d exp>=%zu", len,
+			sizeof(struct osdp_cmd_file_xfer));
 		return -1;
 	}
 
-	f->length = f->ops.write(f->ops.arg, p->data, p->length, p->offset);
-	if (f->length != p->length) {
-		LOG_ERR("TX_Decode: user write failed! rc:%d len:%d off:%d",
-			f->length, p->length, p->offset);
-		f->errors++;
-		return -1;
+	if (p->length) {
+		f->length =
+			f->ops.write(f->ops.arg, p->data, p->length, p->offset);
+		if (f->length != p->length) {
+			LOG_ERR("TX_Decode: user write failed! rc:%d len:%d off:%d",
+				f->length, p->length, p->offset);
+			f->errors++;
+			return -1;
+		}
 	}
 
 	return 0;
@@ -235,7 +239,8 @@ int osdp_file_cmd_stat_build(struct osdp_pd *pd, uint8_t *buf, int max_len)
 	p->delay = 0;
 	f->length = 0;
 
-	LOG_DBG("[offset: %d][size: %d][length: %d]",f->offset, f->size,f->length);
+	LOG_DBG("[offset: %d][size: %d][length: %d]", f->offset, f->size,
+		f->length);
 	assert(f->offset <= f->size);
 	if (f->offset == f->size) { /* EOF */
 		f->ops.close(f->ops.arg);
