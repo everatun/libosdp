@@ -179,7 +179,7 @@ int osdp_file_cmd_tx_decode(struct osdp_pd *pd, uint8_t *buf, int len)
 		return -1;
 	}
 
-	if ((size_t)len <= sizeof(struct osdp_cmd_file_xfer)) {
+	if ((size_t)len < sizeof(struct osdp_cmd_file_xfer)) {
 		LOG_ERR("TX_Decode: invalid decode len:%d exp>=%zu", len,
 			sizeof(struct osdp_cmd_file_xfer));
 		return -1;
