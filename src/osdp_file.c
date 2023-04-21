@@ -85,6 +85,7 @@ int osdp_file_cmd_tx_build(struct osdp_pd *pd, uint8_t *buf, int max_len)
 	}
 
 	p->length = f->length;
+	LOG_DBG("Readed %d bytes from file",f->length);
 
 	return sizeof(struct osdp_cmd_file_xfer) + f->length;
 }
